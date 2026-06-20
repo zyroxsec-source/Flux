@@ -39,35 +39,29 @@ async function sendMessage() {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 
     try {
-        // Wir nutzen den cors-anywhere Proxy, um die CORS-Sperre des Browsers zu umgehen
-        const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-        const targetUrl = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct";
-
-        const response = await fetch(proxyUrl + targetUrl, {
+        const response = await fetch("https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct", {
             method: "POST",
             headers: {
                 "Authorization": "Bearer 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",
-                "Content-Type": "application/json",
-                "X-Requested-With": "XMLHttpRequest"
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({ 
-                inputs: text,
-                parameters: { max_new_tokens: 250, return_full_text: false }
+                inputs: text
             })
         });
 
         const result = await response.json();
         const botDiv = document.getElementById(botMessageId);
         
-        if (result && result[0] && result[0].generated_text) {
+        if (Array.isArray(result) && result[0] && result[0].generated_text) {
             botDiv.innerText = result[0].generated_text;
         } else if (result.error) {
             botDiv.innerText = "Fehler: " + result.error;
         } else {
-            botDiv.innerText = "Konnte keine Antwort generieren.";
+            botDiv.innerText = "Konnte keine Antwort generieren. Guck F12.";
         }
     } catch (error) {
-        document.getElementById(botMessageId).innerText = "Proxy verlangt Aktivierung oder ist überlastet. Schau in F12.";
+        document.getElementById(botMessageId).innerText = "Netzwerkfehler! Schau in F12.";
         console.error("Error:", error);
     }
     chatContainer.scrollTop = chatContainer.scrollHeight;
