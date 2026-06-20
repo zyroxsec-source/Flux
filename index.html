@@ -6,16 +6,23 @@
     <title>Ghost-Flux Chat</title>
     <style>
         body { font-family: Arial, sans-serif; background: #121212; color: white; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        #key-container { padding: 10px; background: #222; text-align: center; border-bottom: 1px solid #333; }
+        #key-input { padding: 5px; width: 300px; background: #333; color: white; border: 1px solid #555; border-radius: 3px; }
         #chat-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
         .message { padding: 10px 15px; border-radius: 15px; max-width: 70%; word-wrap: break-word; }
         .user { background: #007bff; align-self: flex-end; }
         .bot { background: #333; align-self: flex-start; }
         #input-container { padding: 20px; display: flex; gap: 10px; background: #1e1e1e; }
-        input { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #333; color: white; }
+        input[type="text"] { flex: 1; padding: 10px; border-radius: 5px; border: none; background: #333; color: white; }
         button { padding: 10px 20px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
+
+<div id="key-container">
+    <input type="password" id="key-input" placeholder="Hugging Face Token hier einfügen (hf_...)" onchange="saveKey()">
+    <small style="color: #aaa; display: block; margin-top: 5px;">Das Token bleibt sicher in deinem Browser gespeichert und wird nicht auf GitHub hochgeladen.</small>
+</div>
 
 <div id="chat-container"></div>
 <div id="input-container">
@@ -24,7 +31,21 @@
 </div>
 
 <script>
+// Key beim Laden aus dem Browser-Speicher holen
+document.getElementById("key-input").value = localStorage.getItem("hf_token") || "";
+
+function saveKey() {
+    const key = document.getElementById("key-input").value.trim();
+    localStorage.setItem("hf_token", key);
+}
+
 async function sendMessage() {
+    const token = localStorage.getItem("hf_token");
+    if (!token) {
+        alert("Bitte füg zuerst oben dein Hugging Face Token ein!");
+        return;
+    }
+
     const inputField = document.getElementById("user-input");
     const chatContainer = document.getElementById("chat-container");
     const text = inputField.value.trim();
@@ -42,12 +63,10 @@ async function sendMessage() {
         const response = await fetch("https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct", {
             method: "POST",
             headers: {
-                "Authorization": "Bearer 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",
+                "Authorization": "Bearer " + token,
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ 
-                inputs: text
-            })
+            body: JSON.stringify({ inputs: text })
         });
 
         const result = await response.json();
@@ -58,10 +77,10 @@ async function sendMessage() {
         } else if (result.error) {
             botDiv.innerText = "Fehler: " + result.error;
         } else {
-            botDiv.innerText = "Konnte keine Antwort generieren. Guck F12.";
+            botDiv.innerText = "Konnte keine Antwort generieren.";
         }
     } catch (error) {
-        document.getElementById(botMessageId).innerText = "Netzwerkfehler! Schau in F12.";
+        document.getElementById(botMessageId).innerText = "Fehler! Schau in F12.";
         console.error("Error:", error);
     }
     chatContainer.scrollTop = chatContainer.scrollHeight;
