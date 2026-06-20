@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mein Pi Chatbot</title>
+    <meta charset="UTF-8">
+</head>
+<body style="background: #222; color: #fff; font-family: sans-serif; padding: 20px;">
+
+    <h2>Mein KI Chatbot</h2>
+    
+    <div id="chatbox" style="height: 300px; border: 1px solid #555; padding: 10px; overflow-y: scroll; background: #333;">
+        </div>
+
+    <br>
+    <input type="text" id="userInput" style="width: 70%; padding: 10px;" placeholder="Frag mich was...">
+    <button onclick="senden()" style="padding: 10px;">Senden</button>
+
+    <script>
+        // HIER DEINE DATEN EINTRAGEN:
+        const TOKEN = "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";
+        const API_URL = "https://api-inference.huggingface.co/models/gpt2"; // Standard-Modell zum Testen
+
+        async function senden() {
+            const input = document.getElementById("userInput");
+            const text = input.value;
+            if(!text) return;
+
+            const chatbox = document.getElementById("chatbox");
+            chatbox.innerHTML += "<p><b>Du:</b> " + text + "</p>";
+            input.value = "";
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": "Bearer " + TOKEN,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ inputs: text })
+                });
+                const data = await res.json();
+                
+                // Holt die Antwort aus der API
+                const antwort = data[0]?.generated_text || "Keine Antwort.";
+                chatbox.innerHTML += "<p style='color: #00ff00'><b>Bot:</b> " + antwort + "</p>";
+            } catch (e) {
+                chatbox.innerHTML += "<p style='color: red'>Fehler!</p>";
+            }
+        }
+    </script>
+
+</body>
+</html>
